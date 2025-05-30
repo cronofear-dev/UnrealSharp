@@ -9,6 +9,7 @@ public class ActorComponentExtensionGenerator : ExtensionGenerator
     {
         GenerateConstructMethod(ref builder, classSymbol);
         GenerateComponentGetter(ref builder, classSymbol);
+        GenerateGetterOrConstruct(ref builder, classSymbol);
     }
     
     private void GenerateConstructMethod(ref StringBuilder stringBuilder, INamedTypeSymbol classSymbol)
@@ -71,6 +72,26 @@ public class ActorComponentExtensionGenerator : ExtensionGenerator
         stringBuilder.AppendLine($"            return ({fullTypeName}) foundComponent;");
         stringBuilder.AppendLine("        }");
         stringBuilder.AppendLine("        return null;");
+        stringBuilder.AppendLine("     }");
+    }
+    
+    private void GenerateGetterOrConstruct(ref StringBuilder stringBuilder, INamedTypeSymbol classSymbol)
+    {
+        string fullTypeName = classSymbol.ToDisplayString();
+        stringBuilder.AppendLine();
+        stringBuilder.AppendLine("     /// <summary>");
+        stringBuilder.AppendLine("     /// Gets the component of the specified class attached to the specified actor. Constructs the component if not found.");
+        stringBuilder.AppendLine("     /// </summary>");
+        stringBuilder.AppendLine("     /// <param name=\"owner\">The actor to get the component from.</param>");
+        stringBuilder.AppendLine("     /// <returns>The component if found, otherwise the constructed component.</returns>");
+        stringBuilder.AppendLine($"     public static {fullTypeName} GetOrConstruct(UnrealSharp.Engine.AActor owner)");
+        stringBuilder.AppendLine("     {");
+        stringBuilder.AppendLine($"        UActorComponent? foundComponent = owner.GetComponentByClass<{fullTypeName}>(typeof({fullTypeName}));");
+        stringBuilder.AppendLine("        if (foundComponent != null)");
+        stringBuilder.AppendLine("        {");
+        stringBuilder.AppendLine($"            return ({fullTypeName}) foundComponent;");
+        stringBuilder.AppendLine("        }");
+        stringBuilder.AppendLine("        return Construct(owner);");
         stringBuilder.AppendLine("     }");
     }
 }
