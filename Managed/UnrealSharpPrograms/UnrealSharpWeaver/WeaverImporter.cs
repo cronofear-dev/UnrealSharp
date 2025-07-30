@@ -9,31 +9,34 @@ public class WeaverImporter
     private static WeaverImporter? _instance;
     public static WeaverImporter Instance => _instance ??= new WeaverImporter();
 
-    private static readonly string Attributes = ".Attributes";
-    
-    public static readonly string UnrealSharpNamespace = "UnrealSharp";
-    public static readonly string UnrealSharpAttributesNamespace = UnrealSharpNamespace + Attributes;
-    
-    public static readonly string UnrealSharpCoreNamespace = UnrealSharpNamespace + ".Core";
-    public static readonly string UnrealSharpCoreAttributesNamespace = UnrealSharpCoreNamespace + Attributes;
-    public static readonly string UnrealSharpCoreMarshallers = UnrealSharpCoreNamespace + ".Marshallers";
-    
-    public static readonly string InteropNameSpace = UnrealSharpNamespace + ".Interop";
-    public static readonly string AttributeNamespace = UnrealSharpNamespace + Attributes;
-    public static readonly string CoreUObjectNamespace = UnrealSharpNamespace + ".CoreUObject";
-    public static readonly string EngineNamespace = UnrealSharpNamespace + ".Engine";
-    
-    public static readonly string UnrealSharpObject = "UnrealSharpObject";
-    public static readonly string FPropertyCallbacks = "FPropertyExporter";
+    private const string Attributes = ".Attributes";
 
-    public static readonly string CoreUObjectCallbacks = "UCoreUObjectExporter";
-    public static readonly string UObjectCallbacks = "UObjectExporter";
-    public static readonly string UScriptStructCallbacks = "UScriptStructExporter";
-    public static readonly string UFunctionCallbacks = "UFunctionExporter";
-    public static readonly string MulticastDelegatePropertyCallbacks = "FMulticastDelegatePropertyExporter";
-    public static readonly string UStructCallbacks = "UStructExporter";
+    public const string UnrealSharpNamespace = "UnrealSharp";
+    public const string UnrealSharpAttributesNamespace = UnrealSharpNamespace + Attributes;
+
+    public const string UnrealSharpCoreNamespace = UnrealSharpNamespace + ".Core";
+    public const string UnrealSharpCoreAttributesNamespace = UnrealSharpCoreNamespace + Attributes;
+    public const string UnrealSharpCoreMarshallers = UnrealSharpCoreNamespace + ".Marshallers";
+
+    public const string InteropNameSpace = UnrealSharpNamespace + ".Interop";
+    public const string AttributeNamespace = UnrealSharpNamespace + Attributes;
+    public const string CoreUObjectNamespace = UnrealSharpNamespace + ".CoreUObject";
+    public const string EngineNamespace = UnrealSharpNamespace + ".Engine";
+
+    public const string UnrealSharpObject = "UnrealSharpObject";
+    public const string FPropertyCallbacks = "FPropertyExporter";
+
+    public const string CoreUObjectCallbacks = "UCoreUObjectExporter";
+    public const string UObjectCallbacks = "UObjectExporter";
+    public const string UScriptStructCallbacks = "UScriptStructExporter";
+    public const string UFunctionCallbacks = "UFunctionExporter";
+    public const string MulticastDelegatePropertyCallbacks = "FMulticastDelegatePropertyExporter";
+    public const string UStructCallbacks = "UStructExporter";
+
+    public const string GeneratedTypeAttribute = "GeneratedTypeAttribute";
     
-    public static readonly string GeneratedTypeAttribute = "GeneratedTypeAttribute";
+    public MethodReference? UFunctionAttributeConstructor => UnrealSharpAssembly.FindType("UFunctionAttribute", "UnrealSharp.Attributes")?.FindMethod(".ctor");
+    public MethodReference? BlueprintInternalUseAttributeConstructor => UnrealSharpAssembly.FindType("BlueprintInternalUseOnlyAttribute", "UnrealSharp.Attributes.MetaTags")?.FindMethod(".ctor");
     
     public AssemblyDefinition UserAssembly = null!;
     public readonly ICollection<AssemblyDefinition> WeavedAssemblies = [];
@@ -51,6 +54,7 @@ public class WeaverImporter
     public TypeDefinition IInterfaceType = null!;
     public MethodReference GetNativeFunctionFromInstanceAndNameMethod = null!;
     public TypeReference Int32TypeRef = null!;
+    public TypeReference UInt64TypeRef = null!;
     public TypeReference VoidTypeRef = null!;
     public TypeReference ByteTypeRef = null!;
     public MethodReference GetNativeClassFromNameMethod = null!;
@@ -74,6 +78,8 @@ public class WeaverImporter
     public TypeDefinition UActorComponentDefinition = null!;
     
     public TypeDefinition ScriptInterfaceMarshaller = null!;
+    public TypeReference ManagedObjectHandle = null!;
+    public TypeReference UnmanagedDataStore = null!;
     
     public MethodReference BlittableTypeConstructor = null!;
 
@@ -96,6 +102,7 @@ public class WeaverImporter
         TypeSystem typeSystem = UserAssembly.MainModule.TypeSystem;
         
         Int32TypeRef = typeSystem.Int32;
+        UInt64TypeRef = typeSystem.UInt64;
         VoidTypeRef = typeSystem.Void;
         ByteTypeRef = typeSystem.Byte;
         
@@ -143,6 +150,9 @@ public class WeaverImporter
         GeneratedTypeCtor = generatedType.FindMethod(".ctor")!;
         
         ScriptInterfaceMarshaller = UnrealSharpAssembly.FindType("ScriptInterfaceMarshaller`1", CoreUObjectNamespace)!.Resolve();
+        
+        ManagedObjectHandle = UnrealSharpAssembly.FindType("FSharedGCHandle", "UnrealSharp.UnrealSharpCore")!.Resolve();
+        UnmanagedDataStore = UnrealSharpAssembly.FindType("FUnmanagedDataStore", "UnrealSharp.UnrealSharpCore")!.Resolve();
     }
 
     private static MethodReference FindBindingsStaticMethod(string findNamespace, string findClass, string findMethod)
